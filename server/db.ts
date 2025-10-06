@@ -1,16 +1,31 @@
-// Referenced from javascript_database blueprint
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+// Local PostgreSQL database configuration
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Default local PostgreSQL connection
+const defaultConnectionString = 'postgresql://postgres:password@localhost:5432/student_nursing_center';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
+// Use environment variable or default to local PostgreSQL
+const connectionString = process.env.DATABASE_URL || defaultConnectionString;
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+console.log('🐘 Connecting to PostgreSQL database...');
+
+export const pool = new Pool({ 
+  connectionString,
+  // Additional local configuration
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+});
+
+export const db = drizzle(pool, { schema });
+
+// Test the connection
+pool.on('connect', () => {
+  console.log('✅ Connected to PostgreSQL database');
+});
+
+pool.on('error', (err) => {
+  console.error('❌ PostgreSQL connection error:', err);
+});

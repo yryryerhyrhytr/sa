@@ -1,10 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { monthlyExams, syllabusClasses, syllabusSubjects, syllabusChapters } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import session from 'express-session';
+import connectPg from 'connect-pg-simple';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import helmet from 'helmet';
@@ -43,18 +44,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     legacyHeaders: false,
   });
 
-  // Session configuration
+  // PostgreSQL session store
+  const pgSession = connectPg(session);
+
+  // Session configuration with PostgreSQL store
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'coaching-center-secret',
+    store: new pgSession({
+      pool: pool,
+      tableName: 'sessions',
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || 'coaching-center-local-secret-' + crypto.randomBytes(32).toString('hex'),
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     },
     rolling: true,
-    name: 'coaching.sid'
+    name: 'nursing.center.sid'
   }));
 
   // Authentication middleware

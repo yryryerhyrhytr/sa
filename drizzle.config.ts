@@ -1,14 +1,16 @@
 import { defineConfig } from "drizzle-kit";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL, ensure the database is provisioned");
-}
+// Default local PostgreSQL connection
+const defaultConnectionString = 'postgresql://postgres:password@localhost:5432/student_nursing_center';
+
+// Use environment variable or default to local PostgreSQL
+const databaseUrl = process.env.DATABASE_URL || defaultConnectionString;
 
 export default defineConfig({
   out: "./migrations",
   schema: "./shared/schema.ts",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: databaseUrl,
   },
 });
