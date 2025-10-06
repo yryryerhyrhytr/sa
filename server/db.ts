@@ -9,11 +9,18 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create PostgreSQL connection
+// Create PostgreSQL connection with explicit non-WebSocket configuration
 const sql = postgres(process.env.DATABASE_URL, { 
   ssl: false,
   max: 10,
-  transform: postgres.camel
+  transform: postgres.camel,
+  connection: {
+    application_name: 'smartgarden_app'
+  },
+  // Ensure no WebSocket/TLS conflicts
+  prepare: false,
+  types: {},
+  debug: false
 });
 
 export const db = drizzle({ client: sql, schema });
