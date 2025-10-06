@@ -38,9 +38,11 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize database with default teacher
-  const { initializeDatabase } = await import('./init-db');
-  await initializeDatabase();
+  // Skip database initialization - using hardcoded authentication only
+  console.log('🔑 Using hardcoded authentication only - skipping database initialization');
+  console.log('🎯 Available accounts:');
+  console.log('   Teacher: 01762602056 / sir@123@');
+  console.log('   Admin: 01818291546 / sahidx@123@');
 
   const server = await registerRoutes(app);
 

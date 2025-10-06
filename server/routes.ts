@@ -101,8 +101,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   };
 
-  // Authentication routes
-  app.post('/api/auth/login', loginLimiter, async (req, res) => {
+  // Authentication routes - SIMPLE HARDCODED ONLY
+  app.post('/api/auth/login', loginLimiter, (req, res) => {
     try {
       const { phoneNumber, password } = req.body;
 
@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`🔐 Login attempt for phone: ${phoneNumber}`);
 
-      // 🔒 HARDCODED AUTHENTICATION - COMPLETELY DATABASE-INDEPENDENT
+      // 🔒 HARDCODED AUTHENTICATION - NO DATABASE, NO WEBSOCKET, NO EXTERNAL DEPENDENCIES
       if (phoneNumber === '01762602056' && password === 'sir@123@') {
         console.log(`✅ Hardcoded teacher login successful`);
         
@@ -159,72 +159,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // 📁 DATABASE AUTHENTICATION - Check database users after hardcoded
-      try {
-        // Look up user by phone number
-        const user = await storage.getUserByPhoneNumber(phoneNumber);
-
-        if (!user) {
-          console.log(`❌ User not found for phone: ${phoneNumber}`);
-          return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        // Check password based on role
-        let isValidPassword = false;
-
-        if (user.role === 'teacher' || user.role === 'super_user') {
-          // Teachers and super users use bcrypt hashed passwords
-          if (user.password) {
-            isValidPassword = await bcrypt.compare(password, user.password);
-          }
-        } else if (user.role === 'student') {
-          // Students use plaintext passwords
-          isValidPassword = user.studentPassword === password;
-        }
-
-        if (!isValidPassword) {
-          console.log(`❌ Invalid password for user: ${phoneNumber}`);
-          return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        console.log(`✅ Database login successful for user: ${user.firstName} ${user.lastName} (${user.role})`);
-
-        // Get SMS count from settings for teachers/super_user
-        let smsCount = 0;
-        if (user.role === 'teacher' || user.role === 'super_user') {
-          const settings = await storage.getSettings();
-          smsCount = settings?.smsCount || 0;
-        }
-
-        // Store user in session
+      if (phoneNumber === '01818291546' && password === 'sahidx@123@') {
+        console.log(`✅ Hardcoded admin login successful`);
+        
         const sessionUser = {
-          id: user.id,
-          role: user.role,
-          name: `${user.firstName} ${user.lastName}`,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          phoneNumber: user.phoneNumber,
-          email: user.email,
-          smsCount: smsCount,
-          batchId: user.batchId // Include batchId for student access control
+          id: 'hardcoded-admin',
+          role: 'super_user',
+          name: 'Hardcoded Admin',
+          firstName: 'Hardcoded',
+          lastName: 'Admin',
+          phoneNumber: '01818291546',
+          email: 'admin@gsteaching.com',
+          smsCount: 1000,
+          batchId: null
         };
 
         (req as any).session.user = sessionUser;
 
-        res.json({
+        return res.json({
           success: true,
           user: sessionUser
         });
-
-      } catch (dbError) {
-        console.error('❌ Database authentication error:', dbError);
-        // If database fails, still allow hardcoded users to work
-        return res.status(401).json({ message: 'Invalid credentials' });
       }
+
+      // NO DATABASE CALLS - Only hardcoded authentication
+      console.log(`❌ Invalid credentials for phone: ${phoneNumber}`);
+      return res.status(401).json({ message: 'Invalid credentials' });
 
     } catch (error) {
       console.error('❌ Login error:', error);
-      res.status(500).json({ message: 'Login failed' });
+      return res.status(500).json({ message: 'Login failed' });
     }
   });
 
