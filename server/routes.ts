@@ -34,10 +34,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     crossOriginEmbedderPolicy: false
   }));
 
+  // Trust proxy for rate limiting (fixes X-Forwarded-For header issues)
+  app.set('trust proxy', 1);
+
   // Rate limiting for login attempts
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 requests per windowMs
+    max: 50, // limit each IP to 50 requests per windowMs
     message: 'Too many login attempts, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
