@@ -109,12 +109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`🔐 Login attempt for phone: ${phoneNumber}`);
 
-      // 🔒 HARDCODED AUTHENTICATION - Always check first before database
+      // 🔒 HARDCODED AUTHENTICATION - COMPLETELY DATABASE-INDEPENDENT
       if (phoneNumber === '01762602056' && password === 'sir@123@') {
         console.log(`✅ Hardcoded teacher login successful`);
-        
-        const settings = await storage.getSettings();
-        const smsCount = settings?.smsCount || 0;
         
         const sessionUser = {
           id: 'hardcoded-teacher',
@@ -124,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: 'Teacher',
           phoneNumber: '01762602056',
           email: 'teacher@gsteaching.com',
-          smsCount: smsCount,
+          smsCount: 1000, // Fixed value, no database needed
           batchId: null
         };
 
@@ -139,9 +136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (phoneNumber === '01818291546' && password === 'sahidx@123@') {
         console.log(`✅ Hardcoded admin login successful`);
         
-        const settings = await storage.getSettings();
-        const smsCount = settings?.smsCount || 0;
-        
         const sessionUser = {
           id: 'hardcoded-admin',
           role: 'super_user',
@@ -150,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: 'Admin',
           phoneNumber: '01818291546',
           email: 'admin@gsteaching.com',
-          smsCount: smsCount,
+          smsCount: 1000, // Fixed value, no database needed
           batchId: null
         };
 
